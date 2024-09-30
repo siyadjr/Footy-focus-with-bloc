@@ -1,21 +1,25 @@
-import 'package:footy_focus/Models/team_model.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:footy_focus/Models/player_model.dart';
+import 'package:footy_focus/Models/team_model.dart';
 
 const apiKey = '304cc483196f41f4bcf3a5e59a4cc39c';
 
 class FootballApi {
   final String baseUrl = 'https://api.football-data.org/v4';
 
-  Future<Map<String, dynamic>> getPlayerStats(int playerId) async {
+  Future<PlayerModel?> getPlayerStats(int playerId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/persons/$playerId'),
       headers: {
         'X-Auth-Token': apiKey,
       },
     );
+    print(
+        '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>${response.body}');
     if (response.statusCode == 200) {
-      return json.decode(response.body);
+      final data = json.decode(response.body);
+      return PlayerModel.fromJson(data);
     } else {
       throw Exception('Failed to load player stats');
     }
@@ -28,26 +32,10 @@ class FootballApi {
         'X-Auth-Token': apiKey,
       },
     );
-
     if (response.statusCode == 200) {
       return json.decode(response.body);
     } else {
       throw Exception('Failed to load team stats');
-    }
-  }
-
-  Future<Map<String, dynamic>> getLeagueStats(int leagueId) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/leagues/$leagueId'),
-      headers: {
-        'X-Auth-Token': apiKey,
-      },
-    );
-
-    if (response.statusCode == 200) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load league stats');
     }
   }
 
@@ -58,7 +46,6 @@ class FootballApi {
         'X-Auth-Token': apiKey,
       },
     );
-
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       final List<dynamic> teamsData = data['teams'];
@@ -75,24 +62,24 @@ class FootballApi {
         'X-Auth-Token': apiKey,
       },
     );
-
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       return List<Map<String, dynamic>>.from(data['squad']);
     } else {
       throw Exception('Failed to load players for the team');
     }
-  } Future<List<Map<String, dynamic>>> searchPlayers(String query) async {
+  }
+
+  Future<List<Map<String, dynamic>>> searchPlayers(String query) async {
     final response = await http.get(
-      Uri.parse('$baseUrl/players?search=$query'), // Adjust based on the actual API
+      Uri.parse('$baseUrl/players?search=$query'),
       headers: {
         'X-Auth-Token': apiKey,
       },
     );
-
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return List<Map<String, dynamic>>.from(data['players']); // Adjust based on the actual structure
+      return List<Map<String, dynamic>>.from(data['players']);
     } else {
       throw Exception('Failed to load players');
     }

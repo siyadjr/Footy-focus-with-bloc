@@ -9,6 +9,9 @@ class PlayerModel {
   final int shirtNumber;
   final String currentTeamName;
   final String currentTeamCrest;
+  final String contractStart;
+  final String contractEnd;
+  final List<String> competitions;
 
   PlayerModel({
     required this.id,
@@ -21,10 +24,21 @@ class PlayerModel {
     required this.shirtNumber,
     required this.currentTeamName,
     required this.currentTeamCrest,
+    required this.contractStart,
+    required this.contractEnd,
+    required this.competitions,
   });
 
- 
-  factory PlayerModel.fromJson(Map<String, dynamic> json) {
+  factory PlayerModel.fromJson(Map<dynamic, dynamic> json) {
+    // Extracting competition names from runningCompetitions
+    List<String> competitionList = [];
+    if (json['currentTeam'] != null &&
+        json['currentTeam']['runningCompetitions'] != null) {
+      competitionList = List<String>.from(
+          (json['currentTeam']['runningCompetitions'] as List)
+              .map((comp) => comp['name']));
+    }
+
     return PlayerModel(
       id: json['id'],
       name: json['name'],
@@ -36,6 +50,9 @@ class PlayerModel {
       shirtNumber: json['shirtNumber'],
       currentTeamName: json['currentTeam']['name'],
       currentTeamCrest: json['currentTeam']['crest'],
+      contractStart: json['currentTeam']['contract']['start'] ?? 'N/A',
+      contractEnd: json['currentTeam']['contract']['until'] ?? 'N/A',
+      competitions: competitionList,
     );
   }
 }

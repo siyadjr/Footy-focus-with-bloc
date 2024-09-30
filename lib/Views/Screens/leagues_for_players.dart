@@ -87,7 +87,7 @@ class _LeaguesForPlayersState extends State<LeaguesForPlayers> {
             child: TextField(
               onChanged: _filterLeagues,
               decoration: InputDecoration(
-                hintText: 'Search Players...',
+                hintText: 'Search Leagues...',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(30),
