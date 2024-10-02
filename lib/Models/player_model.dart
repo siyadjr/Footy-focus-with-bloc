@@ -30,7 +30,7 @@ class PlayerModel {
   });
 
   factory PlayerModel.fromJson(Map<dynamic, dynamic> json) {
-    // Extracting competition names from runningCompetitions
+   
     List<String> competitionList = [];
     if (json['currentTeam'] != null &&
         json['currentTeam']['runningCompetitions'] != null) {
