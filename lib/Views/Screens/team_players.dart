@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:footy_focus/Controllers/Api/football_api.dart';
-import 'package:footy_focus/Views/Screens/player_details.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:footy_focus/Controllers/Api/football_api.dart'; // Ensure this path is correct
+import 'package:footy_focus/Controllers/Bloc/PlayersBloc/players_bloc_bloc.dart'; // Ensure this path is correct
+import 'package:footy_focus/Views/Screens/player_details.dart'; // Ensure this path is correct
 
-class TeamPlayers extends StatefulWidget {
+class TeamPlayers extends StatelessWidget {
   final int teamId;
 
   const TeamPlayers({
@@ -11,97 +13,68 @@ class TeamPlayers extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _TeamPlayersState createState() => _TeamPlayersState();
-}
-
-class _TeamPlayersState extends State<TeamPlayers> {
-  late Future<List<dynamic>> playersFuture;
-  List<dynamic> allPlayers = [];
-  List<dynamic> displayedPlayers = [];
-  TextEditingController searchController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    playersFuture = FootballApi().fetchPlayersForTeam(widget.teamId);
-    playersFuture.then((players) {
-      setState(() {
-        allPlayers = players;
-        displayedPlayers = allPlayers;
-      });
-    });
-  }
-
-  void filterPlayers(String query) {
-    setState(() {
-      displayedPlayers = allPlayers
-          .where((player) =>
-              player['name'].toLowerCase().contains(query.toLowerCase()) ||
-              player['position'].toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Team Players'),
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: searchController,
-              decoration: InputDecoration(
-                hintText: 'Search players...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
+    return BlocProvider(
+      create: (_) => PlayersBloc()..add(FetchPlayer(teamId)), // Error 1: Event name mismatch (Correct: `FetchPlayer` not `FetchPlayers`)
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Team Players'),
+          elevation: 0,
+        ),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                onChanged: (query) {
+                  context.read<PlayersBloc>().add(FilterPlayer(query)); // Error 2: Event name mismatch (Correct: `FilterPlayer` not `FilterPlayers`)
+                },
+                decoration: InputDecoration(
+                  hintText: 'Search players...',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
               ),
-              onChanged: filterPlayers,
             ),
-          ),
-          Expanded(
-            child: FutureBuilder<List<dynamic>>(
-              future: playersFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No players found.'));
-                } else {
-                  return GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.75,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                    ),
-                    itemCount: displayedPlayers.length,
-                    itemBuilder: (context, index) {
-                      final player = displayedPlayers[index];
-                      return PlayerCard(player: player);
-                    },
-                  );
-                }
-              },
+            Expanded(
+              child: BlocBuilder<PlayersBloc, PlayersBlocState>(
+                builder: (context, state) {
+                  if (state is PlayerLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (state is PlayerLoadingError) {
+                    return Center(child: Text('Error: ${state.message}'));
+                  } else if (state is PlayerLoaded) {
+                    final displayedPlayers = state.players;
+                    if (displayedPlayers.isEmpty) {
+                      return const Center(child: Text('No players found.'));
+                    }
+                    return GridView.builder(
+                      padding: const EdgeInsets.all(16),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.75,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                      ),
+                      itemCount: displayedPlayers.length,
+                      itemBuilder: (context, index) {
+                        final player = displayedPlayers[index];
+                        return PlayerCard(player: player);
+                      },
+                    );
+                  }
+                  return const Center(child: Text('Unexpected state.'));
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
-}
-
-class PlayerCard extends StatelessWidget {
+}class PlayerCard extends StatelessWidget {
   final dynamic player;
 
   const PlayerCard({Key? key, required this.player}) : super(key: key);
@@ -116,9 +89,10 @@ class PlayerCard extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (ctx) => PlayerDetails(
-                      playerId: player['id'],
-                    )),
+              builder: (ctx) => PlayerDetails(
+                playerId: player['id'], // Ensure player data is structured correctly
+              ),
+            ),
           );
         },
         child: Column(
@@ -150,3 +124,4 @@ class PlayerCard extends StatelessWidget {
     );
   }
 }
+

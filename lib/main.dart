@@ -1,8 +1,7 @@
-// main.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:footy_focus/Controllers/Bloc/bloc/league_for_players_bloc.dart';
+import 'package:footy_focus/Controllers/Bloc/TeamsBloc/teams_bloc_bloc.dart';
+import 'package:footy_focus/Controllers/Bloc/legueBloc/league_for_players_bloc.dart';
 import 'package:footy_focus/Views/Screens/screen_home.dart';
 import 'package:footy_focus/Views/Screens/splash_screen.dart';
 
@@ -15,8 +14,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => LeagueForPlayersBloc()..add(LoadLeagues()), // Initialize Bloc and trigger loading leagues
+    return MultiBlocProvider(
+      providers: [
+        // Initialize LeagueForPlayersBloc and trigger loading leagues
+        BlocProvider(
+          create: (context) => LeagueForPlayersBloc()..add(LoadLeagues()),
+        ),
+        // Add other blocs here as needed
+        BlocProvider(
+          create: (context) => TeamsBlocBloc(), // Replace with your actual bloc
+        ),
+      ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'My App',

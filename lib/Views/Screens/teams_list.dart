@@ -1,102 +1,80 @@
 import 'package:flutter/material.dart';
-import 'package:footy_focus/Controllers/Api/football_api.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:footy_focus/Controllers/Bloc/TeamsBloc/teams_bloc_bloc.dart';
 import 'package:footy_focus/Models/team_model.dart';
 import 'package:footy_focus/Views/Screens/team_players.dart';
 
-class TeamsList extends StatefulWidget {
+class TeamsList extends StatelessWidget {
   final String leagueId;
 
   const TeamsList({
-    Key? key,
+    super.key,
     required this.leagueId,
-  }) : super(key: key);
-
-  @override
-  _TeamsListState createState() => _TeamsListState();
-}
-
-class _TeamsListState extends State<TeamsList> {
-  late Future<List<TeamModel>> teamsFuture;
-  List<TeamModel> allTeams = [];
-  List<TeamModel> displayedTeams = [];
-  TextEditingController searchController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    teamsFuture = FootballApi().fetchTeamsForLeague(int.parse(widget.leagueId));
-    teamsFuture.then((teams) {
-      setState(() {
-        allTeams = teams;
-        displayedTeams = allTeams;
-      });
-    });
-  }
-
-  void filterTeams(String query) {
-    setState(() {
-      displayedTeams = allTeams
-          .where((team) =>
-              team.name.toLowerCase().contains(query.toLowerCase()) ||
-              team.country.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
-  }
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Teams'),
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: searchController,
-              decoration: InputDecoration(
-                hintText: 'Search teams...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
+    return BlocProvider(
+      create: (context) => TeamsBlocBloc()..add(LoadTeams(leagueId)),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Teams'),
+          elevation: 0,
+        ),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search teams...',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
+                onChanged: (query) {
+                  context.read<TeamsBlocBloc>().add(FilterTeams(query));
+                },
               ),
-              onChanged: filterTeams,
             ),
-          ),
-          Expanded(
-            child: FutureBuilder<List<TeamModel>>(
-              future: teamsFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No teams found.'));
-                } else {
-                  return GridView.builder(
-                    padding: const EdgeInsets.all(16),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.75,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                    ),
-                    itemCount: displayedTeams.length,
-                    itemBuilder: (context, index) {
-                      final team = displayedTeams[index];
-                      return TeamCard(team: team);
-                    },
-                  );
-                }
-              },
+            Expanded(
+              child: BlocBuilder<TeamsBlocBloc, TeamsBlocState>(
+                builder: (context, state) {
+                  if (state is TeamsLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (state is TeamsError) {
+                    return Center(child: Text(state.message));
+                  } else if (state is TeamsLoaded || state is TeamsFiltered) {
+                    final teams = state is TeamsLoaded
+                        ? state.teams
+                        : (state as TeamsFiltered).filteredTeams;
+
+                    return teams.isEmpty
+                        ? const Center(child: Text('No teams found'))
+                        : GridView.builder(
+                            padding: const EdgeInsets.all(16),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.75,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                            ),
+                            itemCount: teams.length,
+                            itemBuilder: (context, index) {
+                              final team = teams[index];
+                              return TeamCard(team: team);
+                            },
+                          );
+                  } else {
+                    return const Center(child: Text('Something went wrong'));
+                  }
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -105,7 +83,7 @@ class _TeamsListState extends State<TeamsList> {
 class TeamCard extends StatelessWidget {
   final TeamModel team;
 
-  const TeamCard({Key? key, required this.team}) : super(key: key);
+  const TeamCard({super.key, required this.team});
 
   @override
   Widget build(BuildContext context) {
