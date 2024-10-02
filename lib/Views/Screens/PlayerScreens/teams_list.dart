@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:footy_focus/Controllers/Bloc/TeamsBloc/teams_bloc_bloc.dart';
 import 'package:footy_focus/Models/team_model.dart';
-import 'package:footy_focus/Views/Screens/team_players.dart';
+import 'package:footy_focus/Views/Screens/PlayerScreens/team_players.dart';
+import 'package:footy_focus/Views/Screens/TeamScreens.dart/team_details.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TeamsList extends StatelessWidget {
   final String leagueId;
@@ -92,10 +94,7 @@ class TeamCard extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (ctx) => TeamPlayers(teamId: team.id)),
-          );
+          sharedPrefFunction(context);
         },
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -127,5 +126,21 @@ class TeamCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> sharedPrefFunction(BuildContext context) async {
+    final sharedpref = await SharedPreferences.getInstance();
+    final value = sharedpref.getBool(
+      'player',
+    );
+    if (value != true) {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (ctx) => TeamDetails(teamId:team.id)));
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (ctx) => TeamPlayers(teamId: team.id)),
+      );
+    }
   }
 }

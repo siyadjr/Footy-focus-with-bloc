@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:footy_focus/Views/Screens/leagues_for_players.dart';
+import 'package:footy_focus/Views/Screens/PlayerScreens/leagues_for_players.dart';
 import 'package:footy_focus/constant.dart';
+import 'package:footy_focus/main.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PlayerContainer extends StatelessWidget {
   const PlayerContainer({super.key});
@@ -10,6 +12,7 @@ class PlayerContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        sharedPrefFunction();
         Navigator.push(context,
             MaterialPageRoute(builder: (ctx) => const LeaguesForPlayers()));
       },
@@ -80,5 +83,10 @@ class PlayerContainer extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> sharedPrefFunction() async {
+    final sharedpref = await SharedPreferences.getInstance();
+    sharedpref.setBool('player', true);
   }
 }

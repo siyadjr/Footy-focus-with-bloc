@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:footy_focus/Controllers/Bloc/legueBloc/league_for_players_bloc.dart';
-import 'package:footy_focus/Views/Screens/teams_list.dart';
+import 'package:footy_focus/Views/Screens/PlayerScreens/teams_list.dart';
 import 'package:footy_focus/constant.dart';
 import 'package:google_fonts/google_fonts.dart';
 

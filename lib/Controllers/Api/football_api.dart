@@ -68,19 +68,21 @@ class FootballApi {
       throw Exception('Failed to load players for the team');
     }
   }
-
-  Future<List<Map<String, dynamic>>> searchPlayers(String query) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl/players?search=$query'),
-      headers: {
-        'X-Auth-Token': apiKey,
-      },
-    );
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return List<Map<String, dynamic>>.from(data['players']);
-    } else {
-      throw Exception('Failed to load players');
-    }
+  Future<TeamModel> fetchTeamDetails(int teamId) async {
+  final response = await http.get(
+    Uri.parse('$baseUrl/teams/$teamId'),
+    headers: {
+      'X-Auth-Token': apiKey,
+    },
+  );
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+    return TeamModel.fromJson(data);
+  } else {
+    throw Exception('Failed to load team details');
   }
+}
+
+
+ 
 }
