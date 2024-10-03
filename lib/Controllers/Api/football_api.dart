@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'package:http/http.dart' as http;
 import 'package:footy_focus/Models/player_model.dart';
 import 'package:footy_focus/Models/team_model.dart';
@@ -68,21 +69,60 @@ class FootballApi {
       throw Exception('Failed to load players for the team');
     }
   }
+
   Future<TeamModel> fetchTeamDetails(int teamId) async {
-  final response = await http.get(
-    Uri.parse('$baseUrl/teams/$teamId'),
-    headers: {
-      'X-Auth-Token': apiKey,
-    },
-  );
-  if (response.statusCode == 200) {
-    final data = json.decode(response.body);
-    return TeamModel.fromJson(data);
-  } else {
-    throw Exception('Failed to load team details');
+    final response = await http.get(
+      Uri.parse('$baseUrl/teams/$teamId'),
+      headers: {
+        'X-Auth-Token': apiKey,
+      },
+    );
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return TeamModel.fromJson(data);
+    } else {
+      throw Exception('Failed to load team details');
+    }
   }
-}
+ Future<Map<String, dynamic>> fetchStandings(String leagueId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/competitions/$leagueId/standings'),
+        headers: {"X-Auth-Token": apiKey},
+      );
+      
+      log('Standings Response Status: ${response.statusCode}');
+      log('Standings Response Body: ${response.body}');
 
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load standings: ${response.statusCode}');
+      }
+    } catch (e) {
+      log('Error fetching standings: $e');
+      throw Exception('Failed to load standings: $e');
+    }
+  }
 
- 
+  Future<Map<String, dynamic>> fetchTopScorers(String leagueId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/competitions/$leagueId/scorers'),
+        headers: {"X-Auth-Token": apiKey},
+      );
+      
+      log('Top Scorers Response Status: ${response.statusCode}');
+      log('Top Scorers Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      } else {
+        throw Exception('Failed to load top scorers: ${response.statusCode}');
+      }
+    } catch (e) {
+      log('Error fetching top scorers: $e');
+      throw Exception('Failed to load top scorers: $e');
+    }
+  }
 }

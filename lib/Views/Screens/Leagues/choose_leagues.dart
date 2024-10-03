@@ -31,7 +31,6 @@ class ChooseLeagues extends StatelessWidget {
               subtitle: Text(league['country']!),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
-               
                 Navigator.push(context,
                     MaterialPageRoute(builder: (ctx) =>  LeagueDetails(leagueCode:league['code']!,title:league['name']!)));
               },
